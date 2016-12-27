@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-
 """
+This is modified version of https://github.com/wireservice/agate-excel
+
+--
 This module contains the XLS extension to :class:`Table <agate.table.Table>`.
 """
 
@@ -10,7 +12,7 @@ import agate
 import six
 import xlrd
 
-def from_xls(cls, path, sheet=None):
+def from_xls(cls, path, sheet=None, skip_rows=None):
     """
     Parse an XLS file.
 
@@ -19,6 +21,9 @@ def from_xls(cls, path, sheet=None):
     :param sheet:
         The name of a worksheet to load. If not specified then the first
         sheet will be used.
+    :param skip_rows:
+        The number of rows to skip in Excel. This is helpful when you have
+        headers specified in Excel sheets.
     """
     if hasattr(path, 'read'):
         book = xlrd.open_workbook(file_contents=path.read())
@@ -37,10 +42,15 @@ def from_xls(cls, path, sheet=None):
     columns = []
 
     for i in range(sheet.ncols):
-        data = sheet.col_values(i)
-        name = six.text_type(data[0]) or None
-        values = data[1:]
-        types = sheet.col_types(i)[1:]
+        if skip_rows:
+            start_row = skip_rows - 1
+        else:
+            start_row = 0
+
+        data = sheet.col_values(i)[start_row:]
+        name = six.text_type(data[start_row]) or None
+        values = data[start_row+1:]
+        types = sheet.col_types(i)[start_row+1:]
 
         excel_type = determine_excel_type(types)
 
